@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent PNC — Procédures d'évacuation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+  :root {
+    --bg:#0d0f14;--surface:#161820;--surface2:#1e2028;
+    --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
+    --text:#e8eaf0;--muted:#6b7280;
+    --accent:#3b82f6;--accent-dim:rgba(59,130,246,0.12);
+    --green:#10b981;--green-dim:rgba(16,185,129,0.12);
+    --red:#ef4444;--red-dim:rgba(239,68,68,0.12);
+    --amber:#f59e0b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1.5rem 1rem 3rem;max-width:600px;margin:0 auto;}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border);}
+  .logo{width:36px;height:36px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .logo svg{width:20px;height:20px;stroke:white;fill:none;stroke-width:2;}
+  header h1{font-size:17px;font-weight:600;letter-spacing:-0.02em;}
+  header p{font-size:12px;color:var(--muted);margin-top:1px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1rem;}
+  .label{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+  input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;padding:11px 14px;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);}
+  select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;cursor:pointer;}
+  .api-row{display:flex;gap:8px;}
+  .api-row input{flex:1;font-family:'DM Mono',monospace;font-size:12px;}
+  .show-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-size:12px;padding:0 14px;cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;}
+  .api-hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .api-hint a{color:var(--accent);text-decoration:none;}
+  .edit-btn{background:none;border:none;color:var(--accent);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;padding:0;letter-spacing:0.05em;text-transform:uppercase;font-weight:500;}
+  .checklist-edit{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+  textarea{min-height:140px;resize:vertical;line-height:1.7;font-family:'DM Mono',monospace;font-size:12px;padding:12px;}
+  .save-btn{margin-top:8px;background:var(--accent-dim);border:1px solid rgba(59,130,246,0.3);border-radius:8px;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:8px 16px;cursor:pointer;width:auto;}
+  .rec-btn{width:100%;padding:16px;border-radius:12px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;}
+  .rec-btn.recording{background:var(--red-dim);border-color:rgba(239,68,68,0.4);color:var(--red);animation:recpulse 2s infinite;}
+  @keyframes recpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3);}50%{box-shadow:0 0 0 8px rgba(239,68,68,0);}}
+  .rec-dot{width:10px;height:10px;border-radius:50%;background:var(--red);flex-shrink:0;animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+  .transcript-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;min-height:90px;font-size:14px;color:var(--muted);line-height:1.7;margin-top:10px;}
+  .transcript-box.has-content{color:var(--text);border-color:var(--border2);}
+  .eval-btn{width:100%;padding:15px;border-radius:12px;background:var(--accent);border:none;color:white;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;margin-top:0;}
+  .eval-btn:hover:not([disabled]){background:#2563eb;transform:translateY(-1px);}
+  .eval-btn[disabled]{opacity:0.35;cursor:not-allowed;transform:none;}
+  .score-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-top:1rem;animation:fadeup 0.3s ease;}
+  @keyframes fadeup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .score-header{display:flex;align-items:center;gap:16px;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border);}
+  .score-number{font-size:42px;font-weight:600;letter-spacing:-0.04em;line-height:1;}
+  .score-meta{flex:1;}
+  .score-niveau{font-size:16px;font-weight:500;}
+  .score-sub{font-size:13px;color:var(--muted);margin-top:2px;}
+  .progress-bar{height:4px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-top:8px;}
+  .progress-fill{height:100%;border-radius:99px;transition:width 0.8s ease;}
+  .section-title{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin:1rem 0 8px;}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .tag{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:8px;line-height:1.4;}
+  .tag-ok{background:var(--green-dim);color:var(--green);border:1px solid rgba(16,185,129,0.2);}
+  .tag-miss{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
+  .feedback-block{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-top:8px;font-size:14px;line-height:1.7;}
+  .feedback-positif{border-left:3px solid var(--green);}
+  .feedback-amelio{border-left:3px solid var(--amber);}
+  .conseil-block{background:var(--accent-dim);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:12px 14px;margin-top:8px;font-size:14px;line-height:1.7;color:#93c5fd;}
+  .loading-msg{text-align:center;padding:2rem;color:var(--muted);font-size:14px;}
+  .dot-anim::after{content:'.';animation:dots 1.2s infinite;}
+  @keyframes dots{0%{content:'.'}33%{content:'..'}66%{content:'...'}}
+  .err-box{background:var(--red-dim);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--red);margin-top:8px;line-height:1.6;}
+  .warn-box{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--amber);margin-bottom:1rem;line-height:1.6;display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+  </div>
+  <div>
+    <h1>Agent PNC — Évacuation</h1>
+    <p>Mermoz Academy · Entraînement oral</p>
+  </div>
+</header>
+
+<div id="browser-warn" class="warn-box">
+  ⚠️ Ouvrez ce fichier dans <strong>Google Chrome</strong> pour utiliser le microphone.
+</div>
+
+<div class="card">
+  <div class="label">Clé API Anthropic</div>
+  <div class="api-row">
+    <input type="password" id="api-key" placeholder="sk-ant-api03-..." autocomplete="off" />
+    <button class="show-btn" onclick="toggleShow()">Voir</button>
+  </div>
+  <div class="api-hint">
+    Obtenez votre clé sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys.
+  </div>
+</div>
+
+<div class="card">
+  <div class="label">Procédure à évaluer</div>
+  <select id="proc-select" onchange="resetSession()">
+    <option value="terre-prep">Évacuation terrestre — cabine préparée</option>
+    <option value="terre-nprep">Évacuation terrestre — cabine non préparée</option>
+    <option value="canot-prep">Évacuation avec canot — cabine préparée</option>
+    <option value="canot-nprep">Évacuation avec canot — cabine non préparée</option>
+    <option value="conv-prep">Toboggan convertible — cabine préparée</option>
+    <option value="conv-nprep">Toboggan convertible — cabine non préparée</option>
+  </select>
+</div>
+
+<div class="card">
+  <div class="label">
+    Critères de référence
+    <button class="edit-btn" onclick="toggleEdit()">Modifier</button>
+  </div>
+  <div class="checklist-edit" id="edit-zone">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Un critère par ligne</div>
+    <textarea id="checklist-ta"></textarea>
+    <button class="save-btn" onclick="saveChecklist()">✓ Enregistrer</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="label">Votre description orale</div>
+  <button class="rec-btn" id="rec-btn" onclick="toggleRec()">
+    <span>🎙</span><span id="rec-label">Commencer l'enregistrement</span>
+  </button>
+  <div class="transcript-box" id="transcript">Votre transcription apparaîtra ici…</div>
+</div>
+
+<button class="eval-btn" id="eval-btn" onclick="lancerEvaluation()" disabled>
+  Évaluer ma réponse →
+</button>
+
+<div id="feedback-zone"></div>
+
+<script>
+const PROCEDURES = {
+  "terre-prep":{label:"Évacuation terrestre — cabine préparée",criteres:["Avion immobilisé / Moteurs coupés / Ordre d'évacuation par équipage de conduite","Annonce PA : détachez vos ceintures et restez assis","Sollicitation du PAX requis (contenir la foule + point d'assistance en bas du toboggan)","Vérification des conditions extérieures (feu, fumée, débris)","Vérification toboggan armé","Sécurisation à la poignée de structure puis ouverture de l'issue","Vérification porte bloquée en position ouverte et toboggan qui se gonfle","Cas 1 : toboggan gonflé → PAX requis saute et fait le point d'assistance","Cas 2 : toboggan non gonflé → tirer sur la poignée rouge de gonflage en secours","Cas 3 : toboggan toujours non gonflé → bloquer l'accès et rediriger","Ordres clairs : Sautez, bras et jambes tendus en avant. Évacuez !","Vérification cabine, toilettes, cockpit","Évacuation avec mégaphone, lampe, balise, trousses médicales, vivres et eau","Mise en œuvre de la balise, bandes sol/air et organisation de la survie"]},
+  "terre-nprep":{label:"Évacuation terrestre — cabine non préparée",criteres:["Avion immobilisé / Moteurs coupés / Ordre d'évacuation par équipage de conduite","Annonce PA : détachez vos ceintures, laissez les bagages, retirez vos talons et restez assis","Désignation du PAX requis (contenir la foule + point d'assistance)","Vérification des conditions extérieures (feu, fumée, débris)","Vérification toboggan armé","Sécurisation à la poignée de structure puis ouverture de l'issue","Vérification porte bloquée et toboggan qui se gonfle","Cas 1 : toboggan gonflé → PAX requis saute et fait le point d'assistance","Cas 2 : toboggan non gonflé → tirer sur la poignée rouge de gonflage en secours","Cas 3 : toboggan toujours non gonflé → bloquer et rediriger","Ordres clairs : Sautez, bras et jambes tendus en avant. Évacuez !","Vérification cabine, toilettes, cockpit","Évacuation avec mégaphone et lampe uniquement","Regroupement des PAX avec le mégaphone, faire signe aux secours"]},
+  "canot-prep":{label:"Évacuation avec canot — cabine préparée",criteres:["Avion immobilisé / Moteurs coupés / Ordre d'évacuation par équipage de conduite","Annonce PA : détachez vos ceintures et restez assis","Sollicitation de 2 PAX requis : 1 pour contenir la foule, 1 pour mettre en œuvre le canot","Vérification des conditions extérieures (feu, fumée, débris, houle)","Vérification de la non-immersion du seuil de porte","Désarmement du toboggan","Attachement du filin du canot à une structure fixe","Sécurisation à la poignée de structure puis ouverture de l'issue","Lancer le canot et tirer fermement sur le filin","Cas 1 : canot gonflé → rapprocher du seuil, PAX requis gonfle son gilet et ferme la Valve de Venturi","Cas 2 : canot non gonflé → bloquer et rediriger","Ordres clairs : Gonflez votre gilet, Évacuez !","Vérification cabine, toilettes, cockpit","Gonfler son gilet, évacuer avec mégaphone, lampe, balise, trousses médicales, vivres et eau","Couper le filin avec le tranchet","Récupérer les passagers tombés à l'eau avec la haussière","Mettre l'ancre flottante, balise du même côté, fluorescéine et organiser la survie"]},
+  "canot-nprep":{label:"Évacuation avec canot — cabine non préparée",criteres:["Avion immobilisé / Moteurs coupés / Ordre d'évacuation par équipage de conduite","Annonce PA : détachez vos ceintures, équipez-vous des gilets sans les gonfler, retirez les talons, laissez vos bagages","Désignation de 2 PAX requis : 1 pour contenir la foule, 1 pour mettre en œuvre le canot","Vérification des conditions extérieures (feu, fumée, débris, houle)","Vérification de la non-immersion du seuil de porte","Désarmement du toboggan","Attachement du filin du canot à une structure fixe","Sécurisation à la poignée de structure puis ouverture de l'issue","Lancer le canot et tirer fermement sur le filin","Cas 1 : canot gonflé → rapprocher à pieds secs, PAX requis gonfle son gilet et ferme la Valve de Venturi","Cas 2 : canot non gonflé → bloquer et rediriger","Ordres clairs : Gonflez votre gilet, Évacuez !","Vérification cabine, toilettes, cockpit","Gonfler son gilet et évacuer avec mégaphone et lampe","Couper le filin avec le tranchet","Récupérer les passagers tombés à l'eau avec la haussière","Rassurer les PAX et appeler les secours avec le mégaphone"]},
+  "conv-prep":{label:"Toboggan convertible — cabine préparée",criteres:["Avion immobilisé / Moteurs coupés / Ordre d'évacuation par équipage de conduite","Annonce PA : détachez vos ceintures et restez assis","Sollicitation du PAX requis pour contenir la foule et mettre la sangle de sécurité","Vérification des conditions extérieures (feu, fumée, débris, houle)","Vérification toboggan armé","Vérification non-immersion du seuil de porte","Sécurisation à la poignée de structure puis ouverture de l'issue","Vérification porte ouverte/bloquée et convertible gonflé","Cas 1 : convertible gonflé → PAX requis gonfle son gilet et installe la sangle de sécurité","Cas 2 : convertible non gonflé → tirer sur la poignée rouge de gonflage en secours","Cas 3 : toujours non gonflé → bloquer et rediriger","Ordres clairs : Gonflez votre gilet, Évacuez !","Vérification cabine, toilettes, cockpit","Gonfler son gilet, évacuer avec mégaphone, lampe, balise, trousses médicales, vivres et eau","Tirer sur la poignée blanche pour désolidariser le convertible","Couper le filin avec le tranchet","Récupérer les passagers avec la haussière et regrouper les embarcations","Mettre l'ancre flottante, balise du même côté, fluorescéine et organiser la survie"]},
+  "conv-nprep":{label:"Toboggan convertible — cabine non préparée",criteres:["Avion immobilisé / Moteurs coupés / Ordre d'évacuation par équipage de conduite","Annonce PA : détachez vos ceintures, équipez-vous des gilets sans les gonfler, retirez les talons, laissez vos bagages","Désignation du PAX requis pour contenir la foule et mettre la sangle de sécurité","Vérification des conditions extérieures (feu, fumée, débris, houle)","Vérification toboggan armé","Vérification non-immersion du seuil de porte","Sécurisation à la poignée de structure puis ouverture de l'issue","Vérification porte ouverte/bloquée et convertible gonflé","Cas 1 : convertible gonflé → PAX requis gonfle son gilet et installe la sangle de sécurité","Cas 2 : convertible non gonflé → tirer sur la poignée rouge de gonflage en secours","Cas 3 : toujours non gonflé → bloquer et rediriger","Ordres clairs : Gonflez votre gilet, Évacuez !","Vérification cabine, toilettes, cockpit","Gonfler son gilet et évacuer avec mégaphone et lampe","Tirer sur la poignée blanche pour désolidariser le convertible","Couper le filin avec le tranchet","Récupérer les passagers avec la haussière et regrouper les embarcations","Rassurer les PAX et appeler les secours avec le mégaphone"]}
+};
+
+var customChecklists = {};
+var recognition = null;
+var isRecording = false;
+var currentTranscript = "";
+
+// Restaurer clé
+try {
+  var saved = localStorage.getItem("pnc_api_key");
+  if (saved) document.getElementById("api-key").value = saved;
+} catch(e){}
+
+document.getElementById("api-key").addEventListener("input", function() {
+  try { localStorage.setItem("pnc_api_key", this.value.trim()); } catch(e){}
+});
+
+if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+  document.getElementById("browser-warn").style.display = "block";
+}
+
+function toggleShow() {
+  var inp = document.getElementById("api-key");
+  inp.type = inp.type === "password" ? "text" : "password";
+}
+
+function getCurrentCriteres() {
+  var key = document.getElementById("proc-select").value;
+  return customChecklists[key] || PROCEDURES[key].criteres;
+}
+
+function toggleEdit() {
+  var zone = document.getElementById("edit-zone");
+  if (!zone.style.display || zone.style.display === "none") {
+    document.getElementById("checklist-ta").value = getCurrentCriteres().join("\n");
+    zone.style.display = "block";
+  } else {
+    zone.style.display = "none";
+  }
+}
+
+function saveChecklist() {
+  var key = document.getElementById("proc-select").value;
+  var lines = document.getElementById("checklist-ta").value.split("\n").map(function(l){ return l.trim(); }).filter(function(l){ return l.length > 0; });
+  customChecklists[key] = lines;
+  document.getElementById("edit-zone").style.display = "none";
+}
+
+function resetSession() {
+  document.getElementById("edit-zone").style.display = "none";
+  document.getElementById("feedback-zone").innerHTML = "";
+  var box = document.getElementById("transcript");
+  box.textContent = "Votre transcription apparaîtra ici…";
+  box.classList.remove("has-content");
+  currentTranscript = "";
+  document.getElementById("eval-btn").disabled = true;
+}
+
+function toggleRec() {
+  if (isRecording) { stopRec(); } else { startRec(); }
+}
+
+function startRec() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert("Utilisez Google Chrome pour la reconnaissance vocale."); return; }
+  recognition = new SR();
+  recognition.lang = "fr-FR";
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  currentTranscript = "";
+
+  recognition.onresult = function(e) {
+    var final = "", interim = "";
+    for (var i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) { final += e.results[i][0].transcript + " "; }
+      else { interim += e.results[i][0].transcript; }
+    }
+    currentTranscript = final;
+    var box = document.getElementById("transcript");
+    box.textContent = (final + interim) || "En écoute…";
+    box.classList.add("has-content");
+  };
+
+  recognition.onerror = function() { stopRec(); };
+  recognition.onend = function() { if (isRecording) { recognition.start(); } };
+  recognition.start();
+
+  isRecording = true;
+  var btn = document.getElementById("rec-btn");
+  btn.classList.add("recording");
+  btn.innerHTML = '<span class="rec-dot"></span><span>Arrêter l\'enregistrement</span>';
+  document.getElementById("transcript").textContent = "En écoute…";
+}
+
+function stopRec() {
+  if (recognition) { recognition.stop(); }
+  isRecording = false;
+  var btn = document.getElementById("rec-btn");
+  btn.classList.remove("recording");
+  btn.innerHTML = '<span>🎙</span><span>Recommencer l\'enregistrement</span>';
+  if (currentTranscript.trim().length > 2) {
+    document.getElementById("eval-btn").disabled = false;
+  }
+}
+
+function lancerEvaluation() {
+  var apiKey = document.getElementById("api-key").value.trim();
+  var feedZone = document.getElementById("feedback-zone");
+
+  if (!apiKey) {
+    feedZone.innerHTML = '<div class="err-box">⚠️ Entrez votre clé API Anthropic dans le champ en haut.</div>';
+    return;
+  }
+
+  var key = document.getElementById("proc-select").value;
+  var proc = PROCEDURES[key];
+  var criteres = getCurrentCriteres();
+  var texteEleve = currentTranscript.trim();
+
+  if (!texteEleve) {
+    feedZone.innerHTML = '<div class="err-box">⚠️ Aucune transcription détectée. Enregistrez votre voix d\'abord.</div>';
+    return;
+  }
+
+  feedZone.innerHTML = '<div class="score-card"><div class="loading-msg">Analyse en cours<span class="dot-anim"></span></div></div>';
+  document.getElementById("eval-btn").disabled = true;
+
+  var systemPrompt = "Tu es un formateur PNC expert en sécurité aérienne chez Mermoz Academy.\n\nProcédure : " + proc.label + "\n\nCritères attendus :\n" + criteres.map(function(c,i){ return (i+1)+". "+c; }).join("\n") + "\n\nInstructions :\n- Compare la restitution de l'élève avec les critères\n- Accepte les formulations approximatives si le concept est correct\n- Score sur 100 basé sur le ratio de critères couverts\n- Réponds UNIQUEMENT en JSON brut sans backticks :\n{\"score\":75,\"niveau\":\"Bien\",\"criteres_ok\":[\"...\"],\"criteres_manquants\":[\"...\"],\"feedback_positif\":\"...\",\"feedback_amelioration\":\"...\",\"conseil_progression\":\"...\"}";
+
+  fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5",
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: "user", content: "L'élève a dit :\n\n\"" + texteEleve + "\"" }]
+    })
+  })
+  .then(function(res) {
+    if (!res.ok) {
+      return res.json().then(function(err) {
+        throw new Error(err.error ? err.error.message : "Erreur HTTP " + res.status);
+      });
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    var raw = data.content.map(function(b){ return b.text || ""; }).join("").replace(/```json|```/g, "").trim();
+    var r = JSON.parse(raw);
+    var col = r.score >= 80 ? "#10b981" : r.score >= 60 ? "#f59e0b" : "#ef4444";
+    var okTags = (r.criteres_ok || []).map(function(c){ return '<span class="tag tag-ok">✓ ' + c + '</span>'; }).join("");
+    var missTags = (r.criteres_manquants || []).map(function(c){ return '<span class="tag tag-miss">✗ ' + c + '</span>'; }).join("");
+
+    feedZone.innerHTML =
+      '<div class="score-card">' +
+        '<div class="score-header">' +
+          '<div class="score-number" style="color:' + col + '">' + r.score + '</div>' +
+          '<div class="score-meta">' +
+            '<div class="score-niveau">' + r.niveau + '</div>' +
+            '<div class="score-sub">' + (r.criteres_ok||[]).length + ' / ' + criteres.length + ' critères couverts</div>' +
+            '<div class="progress-bar"><div class="progress-fill" style="width:' + r.score + '%;background:' + col + '"></div></div>' +
+          '</div>' +
+        '</div>' +
+        (okTags ? '<div class="section-title">Points restitués</div><div class="tags">' + okTags + '</div>' : '') +
+        (missTags ? '<div class="section-title" style="margin-top:1rem;">Points manquants</div><div class="tags">' + missTags + '</div>' : '') +
+        '<div class="section-title" style="margin-top:1rem;">Retour formateur</div>' +
+        '<div class="feedback-block feedback-positif">' + r.feedback_positif + '</div>' +
+        '<div class="feedback-block feedback-amelio" style="margin-top:6px;">' + r.feedback_amelioration + '</div>' +
+        '<div class="section-title" style="margin-top:1rem;">Conseil pour progresser</div>' +
+        '<div class="conseil-block">' + r.conseil_progression + '</div>' +
+      '</div>';
+  })
+  .catch(function(e) {
+    feedZone.innerHTML = '<div class="err-box">❌ ' + e.message + '<br><br>Vérifiez votre clé API et votre connexion internet.</div>';
+  })
+  .finally(function() {
+    document.getElementById("eval-btn").disabled = false;
+  });
+}
+</script>
+</body>
+</html>
